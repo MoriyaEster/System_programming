@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_DIST 999999
+
 typedef struct vert_ vert;
 typedef struct edge_ edge;
 
@@ -20,7 +22,8 @@ typedef struct vert_
 {
     int value;
     edge * next_edge;
-    vert * nextV;    
+    vert * nextV;  
+    int dist;
 } vert;
 
 void check(vert * arr){
@@ -47,13 +50,21 @@ void check(vert * arr){
 
 }
 
+void free_all (vert * head){
+
+    if (head != NULL)
+    {
+        vert * head_for_free = head;
+        while(head_for_free != NULL){
+            delete(&head_for_free,head_for_free->value);
+        }
+    }
+}
+
 char new_graph (vert ** head_of_vert){
     if (*head_of_vert != NULL)
     {
-        vert * head = *head_of_vert;
-        while(head != NULL){
-            delete(&head,head->value);
-        }
+        free_all (*head_of_vert);
     }
     
     int num_of_vert = 0;
@@ -64,6 +75,10 @@ char new_graph (vert ** head_of_vert){
     for (int i = 0; i< num_of_vert; i++){
         if((array_of_vert = (vert*) malloc(sizeof (vert))) == NULL){
         printf ("Not enough memory1, exit program\n");
+        if (*head_of_vert != NULL)
+        {
+            free_all (*head_of_vert);
+        }
         exit(-1);
         }
         if (i == 0)
@@ -112,6 +127,10 @@ char new_graph (vert ** head_of_vert){
             if((new_edge = (edge*) malloc (sizeof(edge) )) == NULL)
             {
                 printf ("Not enough memory2, exit program\n");
+                if (*head_of_vert != NULL)
+                {
+                    free_all (*head_of_vert);
+                }
                 exit(-1);
             }
 
@@ -187,7 +206,11 @@ void new_vert(vert * arr_vert1){
         
         if((new_vert = (vert*) malloc (sizeof(vert) )) == NULL)
         {
-            printf ("Not enough memory2, exit program\n");
+            printf ("Not enough memory3, exit program\n");
+            if (arr_vert1 != NULL)
+            {
+                free_all (arr_vert1);
+            }
             exit(-1);
         }
 
@@ -209,7 +232,11 @@ void new_vert(vert * arr_vert1){
         edge * new_edge = NULL;
         if((new_edge = (edge*) malloc (sizeof(edge) )) == NULL)
         {
-            printf ("Not enough memory2, exit program\n");
+            printf ("Not enough memory4, exit program\n");
+            if (arr_vert1 != NULL)
+            {
+                free_all (arr_vert1);
+            }
             exit(-1);
         }
         *last_edge = new_edge;
@@ -344,6 +371,103 @@ void delete (vert ** arr, int input){
 
 }
 
+int shortest_path (vert * head, int src, int des){
+    vert * value = head;
+    vert * inf = head;
+    vert * dest = head;
+    edge * src_edge = NULL;
+    edge * path = NULL;
+    int find_src = 0;
+    int find_des = 0;
+
+    while (inf != NULL){
+        if (inf->value == src){
+            find_src = 1;
+            inf->dist =0;
+        }
+        else{
+            inf->dist = MAX_DIST;
+        }
+        if (inf->value == des){
+            find_des = 1;
+        }
+        if (!find_des){
+            dest = dest->nextV;
+        }
+        if (!find_src){
+            value = value->nextV;
+        }
+        inf = inf->nextV;
+    }
+
+    src_edge = value->next_edge;
+    path = value->next_edge;
+
+    inf = value;
+    while (path != NULL){
+        if (value->dist + path->weight < path->dest_vert->dist){
+            path->dest_vert->dist = value->dist + path->weight;
+        }
+        path = path->next;
+    }
+
+    while (src_edge != NULL){
+        path = src_edge->dest_vert->next_edge;
+        inf = src_edge->dest_vert;
+        while (path != NULL){
+            if (inf->dist + path->weight < path->dest_vert->dist){
+                path->dest_vert->dist = inf->dist + path->weight;
+            }
+            path = path->next;
+        }
+        src_edge = src_edge->next;
+    }
+    if (dest->dist == MAX_DIST){
+        return -1;
+    }
+    return (dest->dist);
+
+}
+
+void swap (int *arr, int i, int j){
+    int temp = arr[i];
+    arr[i] = arr [j];
+    arr[j] = temp;
+}
+
+int find_d (int * min_d, int * arr_of_k, int k, vert * head){
+    int sum = 0;
+    int there_is_path = 0;
+
+    for (int i = 0; i < k-1; i++){
+        there_is_path = 0;
+        there_is_path = shortest_path (head, arr_of_k[i], arr_of_k[i+1]);
+        if (there_is_path == -1)
+        {
+            return *min_d;
+        }
+        sum += there_is_path;        
+    }
+    if (sum < *min_d){
+        *min_d = sum;
+    }
+    return *min_d;
+}
+
+void permutation(int * arr_of_k, int k, int place, int * min_d, vert *head){
+    if (place == k-1){
+        *min_d = find_d (min_d, arr_of_k, k, head);
+        return;
+    }
+
+    for(int i = place; i < k; i++){
+        swap (arr_of_k, i, place);
+        permutation (arr_of_k, k, place+1, min_d, head);
+        swap (arr_of_k, i, place);
+    }
+
+}
+
 
 int main(){
     vert * head = NULL;
@@ -355,24 +479,55 @@ int main(){
         switch(n){
             case 'A':
                 n = new_graph(&head);
-                printf("A:\n");
-                check (head);
-                printf ("\n");
+                // printf("A:\n");
+                // check (head);
+                // printf ("\n");
                 flag = 0;
                 break;
             case 'B':
                 new_vert(head);
-                printf("B:\n");
-                check (head);
-                printf ("\n");
+                // printf("B:\n");
+                // check (head);
+                // printf ("\n");
                 scan = 0;
                 break;
             case 'D':
                 delete_vert(&head);
-                printf("D:\n");
-                check (head);
-                printf ("\n");
-                scan = 0;
+                // printf("D:\n");
+                // check (head);
+                // printf ("\n");
+                break;
+            case 'S':
+                int src = 0;
+                int des = 0;
+                scanf ("%d", &src);
+                scanf ("%d", &des);
+                int Dijsktra = shortest_path (head, src, des);
+                printf ("Dijsktra shortest path: %d\n", Dijsktra);
+            case ' ':
+                break;
+            case 'T':
+                int k = 0;
+                int max = MAX_DIST;
+                scanf ("%d", &k);
+                int * arr_of_k = NULL;
+                if ((arr_of_k = (int*) malloc (sizeof(int) * k)) == NULL){
+                    printf ("Not enough memory5, exit program\n");
+                    if (head != NULL)
+                    {
+                        free_all (head);
+                    }
+                    exit(-1);
+                }
+                for (int i= 0; i<k; i++){
+                    scanf("%d",&(arr_of_k[i]));
+                }
+                permutation (arr_of_k, k, 0, &max, head);
+                if (max == MAX_DIST){
+                    max = -1;
+                }
+                printf ("TSP shortest path: %d\n", max);
+                free(arr_of_k);
                 break;
             default:
                 flag_break = 0;
@@ -382,5 +537,6 @@ int main(){
         }
         flag = 1;
     }
+    
     return 0;
 }
