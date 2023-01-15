@@ -503,7 +503,7 @@ int main(){
                 scanf ("%d", &src);
                 scanf ("%d", &des);
                 int Dijsktra = shortest_path (head, src, des);
-                printf ("Dijsktra shortest path: %d\n", Dijsktra);
+                printf ("Dijsktra shortest path: %d \n", Dijsktra);
             case ' ':
                 break;
             case 'T':
@@ -526,7 +526,7 @@ int main(){
                 if (max == MAX_DIST){
                     max = -1;
                 }
-                printf ("TSP shortest path: %d\n", max);
+                printf ("TSP shortest path: %d \n", max);
                 free(arr_of_k);
                 break;
             default:
