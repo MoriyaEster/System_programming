@@ -1,13 +1,13 @@
 CC = gcc
 FLAG = -Wall -g
 
-all: edges
+all: graph
 
-edges.c:
-	$(CC) $(FLAG) -o edges edges.c
+graph.c:
+	$(CC) $(FLAG) -o graph graph.c
 
 .PHONY: all clean
 
 
 clean: 
-	rm -f *.o edges
+	rm -f *.o graph
